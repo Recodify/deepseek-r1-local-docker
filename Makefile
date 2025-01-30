@@ -1,5 +1,5 @@
 # Declare all phony targets (targets that don't represent files)
-.PHONY: setup-gpu test-gpu docker-up-linux-gpu docker-up-mac-gpu docker-up-windows-gpu docker-up-cpu-only watch-gpu clean-up
+.PHONY: setup-gpu test-gpu docker-up-linux-gpu docker-up-mac-gpu docker-up-windows-gpu docker-up-cpu-only watch-gpu clean-up run-demo
 
 # Install NVIDIA drivers and required GPU dependencies
 setup-gpu:
@@ -56,3 +56,6 @@ watch-tcp-external-only:
 clean-up:
 	@sudo docker compose down
 
+run-demo:
+	@rm -rf ./demo-deploy
+	@./run-demo.sh

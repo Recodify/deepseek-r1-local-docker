@@ -63,7 +63,7 @@ check_webui() {
         if curl -s -f http://localhost:${WEBUI_PORT} >/dev/null; then
             return 0
         fi
-        sleep 1
+        sleep 2
     done
     return 1
 }
