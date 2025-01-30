@@ -10,6 +10,7 @@
 
 
 
+
 # DeepSeek R1 Local
 
 Run DeepSeek R1 models locally using Docker. Interact with the model through a browser-based UI or CLI using Ollama.
