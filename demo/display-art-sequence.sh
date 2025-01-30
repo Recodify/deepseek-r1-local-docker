@@ -23,8 +23,8 @@ get_color_code() {
 
     # Bright colors (90-97)
     local -A bright_colors=(
-        ["black"]="90" ["red"]="91" ["green"]="92" ["yellow"]="93"
-        ["blue"]="94" ["magenta"]="95" ["cyan"]="96" ["white"]="97"
+        ["black"]="1;30" ["red"]="1;31" ["green"]="1;32" ["yellow"]="1;33"
+        ["blue"]="1;34" ["magenta"]="1;35" ["cyan"]="1;36" ["white"]="1;37"
     )
 
     local color_code
@@ -293,14 +293,7 @@ print_single_art() {
     local color_spec="${3:-blue}"
     local show_config="${4:-}"
 
-    # If show_config is enabled, display the configuration
-    if [ "$show_config" = "show_config" ]; then
-        echo -e "\033[90m# Configuration:"
-        echo -e "# File: $art_file"
-        echo -e "# Effect: $effect"
-        echo -e "# Color: $color_spec\033[0m"
-        echo
-    fi
+    
 
     # Split color_spec into color and variant (e.g., "blue:base" or just "blue")
     local color="${color_spec%:*}"
@@ -316,6 +309,16 @@ print_single_art() {
 
     # Get color code
     local color_code=$(get_color_code "$color" "$variant")
+
+    # If show_config is enabled, display the configuration
+    if [ "$show_config" = "show_config" ]; then
+        echo -e "\033[90m# Configuration:"
+        echo -e "# File: $art_file"
+        echo -e "# Effect: $effect"
+        echo -e "# Color: $color_spec\033[0m"
+        
+        echo -e "$color_code"
+    fi
 
     # Store the art in an array
     local -a art_lines
