@@ -9,8 +9,11 @@ The project includes several make commands to simplify common operations. These 
 ### Setup Commands
 - `make install-docker` - Installs Docker and all required dependencies
 - `make setup-gpu` - Installs NVIDIA drivers and GPU dependencies
-- `make test-gpu` - Runs a test container to verify GPU availability and driver installation
 - `make setup-watch-tcp` - Sets up the logging chain required for TCP connection monitoring
+
+### Status Commands
+- `make test-gpu` - Runs a test container to verify GPU availability and driver installation
+- `make run-status-check` - Runs a test container to verify GPU availability and driver installation
 
 ### Start Commands
 - `make docker-up-linux-gpu` - Starts containers with GPU support on Linux.

@@ -36,19 +36,6 @@ if ! check_container; then
     exit 1
 fi
 
-# Function to show progress bar using simple ASCII characters
-show_progress() {
-    local percentage=$1
-    local width=20
-    local filled=$((percentage * width / 100))
-    local empty=$((width - filled))
-
-    printf "["
-    printf "%${filled}s"
-    printf "%${empty}s"
-    printf "]"
-}
-
 # Function to show animated spinner when no progress
 show_spinner() {
     local animation_state=$1
@@ -71,6 +58,10 @@ check_webui() {
 # Initialize variables
 last_percentage=""
 animation_counter=0
+highest_percentage=0
+last_update_time=0
+current_sizes=""
+current_speed=""
 
 while true; do
     # Check if server is ready
@@ -102,39 +93,44 @@ while true; do
             checking_message_shown=1
         fi
 
-        # Extract progress information using grep and sed
+        # Extract progress information
         progress_line=$(docker logs $CONTAINER_NAME 2>&1 | grep -F "pulling" | tail -n 1)
+        current_time=$(date +%s.%N)
 
         if [ ! -z "$progress_line" ]; then
-            # Extract percentage
-            percentage=$(echo "$progress_line" | grep -o '[0-9]\+%' | head -n 1 | tr -d '%')
+            current_percentage=$(echo "$progress_line" | grep -o '[0-9]\+%' | head -n 1 | tr -d '%')
 
-            # Extract current/total size
-            sizes=$(echo "$progress_line" | grep -o '[0-9.]\+ [MG]B/[0-9.]* [MG]B' | head -n 1)
+            if [ ! -z "$current_percentage" ]; then
+                # Always update sizes and speed even if percentage is lower
+                new_sizes=$(echo "$progress_line" | grep -o '[0-9.]\+ [MG]B/[0-9.]\+ [MG]B' | head -n 1)
+                new_speed=$(echo "$progress_line" | grep -o '[0-9.]\+ [MG]B/s' | head -n 1)
 
-            # Extract speed
-            speed=$(echo "$progress_line" | grep -o '[0-9.]\+ [MG]B/s' | head -n 1)
-
-            if [ ! -z "$percentage" ] && [ "$percentage" != "$last_percentage" ]; then
-                echo -ne "\r$(show_progress $percentage) ${percentage}% | ${sizes} | ${speed}      \r"
-                last_percentage=$percentage
-
-                # If we reach 100%, continue checking for server listening
-                if [ "$percentage" = "100" ]; then
-                    echo -e "\nDownload complete, waiting for server to start..."
+                if [ ! -z "$new_sizes" ]; then
+                    current_sizes=$new_sizes
                 fi
-            else
-                # Show spinner when percentage hasn't changed
-                echo -ne "\r[$(show_spinner $((animation_counter % 4)))] Downloading...      \r"
-                ((animation_counter++))
+                if [ ! -z "$new_speed" ]; then
+                    current_speed=$new_speed
+                fi
+
+                if [ "$current_percentage" -ge "$highest_percentage" ]; then
+                    highest_percentage=$current_percentage
+                    last_update_time=$current_time
+                fi
             fi
+        fi
+
+        # Show progress with spinner
+        if [ "$highest_percentage" -gt 0 ]; then
+            echo -ne "\r[$(show_spinner $animation_counter)] Downloading... ${highest_percentage}% | ${current_sizes} | ${current_speed}  \r"
         else
-            # Show spinner when no progress line is found
-            echo -ne "\r[$(show_spinner $((animation_counter % 4)))] Downloading...      \r"
-            ((animation_counter++))
+            echo -ne "\r[$(show_spinner $animation_counter)] Downloading... \r"
+        fi
+
+        animation_counter=$((animation_counter + 1))
+        if [ $animation_counter -ge 4 ]; then
+            animation_counter=0
         fi
     fi
 
-    # Wait a shorter time for smoother animation
-    sleep 0.1
+    sleep 0.2
 done

@@ -100,7 +100,7 @@ To check the progress start up you can run `make run-status-check`
 
 **Download in progress:**
 
-![Downloading](./images/status-check-downloading.png)
+![Downloading](./images/status-ani.gif)
 
 
 **Status check OK:**
