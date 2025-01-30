@@ -160,7 +160,6 @@ newline
 sleep $SECTION_PAUSE
 clear
 
-
 newline
 sleep $ANIMATION_PAUSE
 newline
@@ -191,7 +190,7 @@ comment "Finaly: wait for everything to be ready"
 simulate_typing "./scripts/status-check.sh"
 note "This will take quite a long time the first time you do it as it's pulling the model, I'm cheating."
 
-comment "Off we go: Feel free toask a question!"
+comment "Off we go: Feel free to ask a question!"
 simulate_typing "docker exec -it deepseek-ollama ollama run deepseek-r1:1.5b 'What is the capital of France?'"
 sleep $SECTION_PAUSE
 
@@ -214,10 +213,8 @@ instruction ""
 instruction "                                                                      ---------------------------------------------------------------"
 instruction ""
 instruction "                                                                          🔗 https://github.com/Recodify/deepseek-r1-local-docker"
-instruction ""
-instruction "                                                                          🧔 https://www.linkedin.com/in/sam-shiles-8494577/"
-instruction ""
-instruction "                                                                          🌐 https://recodify.co.uk/"
+instruction "                                                                          🧔 https://www.linkedin.com/in/sam-shiles-8494577"
+instruction "                                                                          🌐 https://recodify.co.uk"
 instruction ""
 instruction "                                                                                           👋 Over and out!"
 information "                                                                      ==============================================================="
