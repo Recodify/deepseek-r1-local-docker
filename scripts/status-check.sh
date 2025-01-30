@@ -125,12 +125,12 @@ while true; do
                 fi
             else
                 # Show spinner when percentage hasn't changed
-                echo -ne "\r[$(show_spinner $((animation_counter % 4)))] Waiting...      \r"
+                echo -ne "\r[$(show_spinner $((animation_counter % 4)))] Downloading...      \r"
                 ((animation_counter++))
             fi
         else
             # Show spinner when no progress line is found
-            echo -ne "\r[$(show_spinner $((animation_counter % 4)))] Waiting...      \r"
+            echo -ne "\r[$(show_spinner $((animation_counter % 4)))] Downloading...      \r"
             ((animation_counter++))
         fi
     fi

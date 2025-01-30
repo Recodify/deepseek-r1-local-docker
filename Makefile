@@ -1,5 +1,5 @@
 # Declare all phony targets (targets that don't represent files)
-.PHONY: setup-gpu test-gpu docker-up-linux-gpu docker-up-mac-gpu docker-up-windows-gpu docker-up-cpu-only watch-gpu clean-up run-demo
+.PHONY: setup-gpu test-gpu docker-up-linux-gpu docker-up-mac-gpu docker-up-windows-gpu docker-up-cpu-only watch-gpu clean-up run-demo run-status-check
 
 # Install NVIDIA drivers and required GPU dependencies
 setup-gpu:
@@ -8,6 +8,9 @@ setup-gpu:
 # Test GPU availability and NVIDIA driver installation by running a test container
 test-gpu:
 	@docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi
+
+run-status-check:
+	@sudo ./scripts/status-check.sh
 
 # Install Docker and required dependencies
 install-docker:

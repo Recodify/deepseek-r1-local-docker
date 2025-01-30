@@ -96,9 +96,16 @@ You should see something like this:
 
 When first starting the container, the model will be downloaded. This may take a few minutes. The default model of 1.5B parameters is 1.1gb. File size for other models can be found in the [Available Models](#available-models) section.
 
-To check the progress of the model download, run `docker logs -f deepseek-ollama`:
+To check the progress start up you can run `make run-status-check`
 
-![Model Download](images/model-pull-startup-progress.png)
+**Download in progress:**
+
+![Downloading](./images/status-check-downloading.png)
+
+
+**Status check OK:**
+
+![Ok](./images/status-check-ok.png)
 
 ## Available Models
 
