@@ -20,7 +20,7 @@ simulate_typing() {
     text=$1
     current_dir=$(pwd)
     # Update prompt with current directory
-    dir_display="$(echo "~${current_dir#$HOME}" | sed 's/code\/terminal-sim\///')"
+    dir_display="$(echo "~${current_dir#$HOME}" | sed 's/code\/deepseek-local-docker\///')"
     [ "$current_dir" == "$HOME" ] && dir_display="~"
     PROMPT="${GREEN}altmans@openai${RESET}:${BLUE}${dir_display}${RESET}\$ "
 
@@ -193,6 +193,7 @@ note "This will take quite a long time the first time you do it as it's pulling 
 comment "Off we go: Feel free to ask a question!"
 simulate_typing "docker exec -it deepseek-ollama ollama run deepseek-r1:1.5b 'What is the capital of France?'"
 sleep $SECTION_PAUSE
+clear
 
 # Outro
 sleep $STEP_INTRO_PAUSE
