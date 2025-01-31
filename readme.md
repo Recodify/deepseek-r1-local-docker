@@ -40,14 +40,22 @@ Access the interface at `http://localhost:8080`
 
 ### CLI
 ```bash
+# docker exec
 docker exec -it deepseek-ollama ollama run deepseek-r1:1.5b "What is the capital of France?"
+
+# or, utility script
+./scripts/interact.sh
 ```
 
 ![CLI](images/prompt-ani.gif)
 
 ### CLI Interactive Terminal
 ```bash
+# docker exec
 docker exec -it deepseek-ollama ollama run deepseek-r1:1.5b
+
+# or, utility script
+./scripts/prompt.sh "What's the capital of France?"
 ```
 
 ![Interactive Terminal](images/interactive-ani.gif)
