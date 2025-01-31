@@ -43,7 +43,7 @@ Access the interface at `http://localhost:8080`
 docker exec -it deepseek-ollama ollama run deepseek-r1:1.5b "What is the capital of France?"
 ```
 
-![CLI](images/cli-ani.gif)
+![CLI](images/prompt-ani.gif)
 
 ### CLI Interactive Terminal
 ```bash
