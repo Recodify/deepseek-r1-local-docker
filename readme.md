@@ -73,6 +73,12 @@ Alternatively... read on.
 
 ## Quick Start
 
+### With Pictures
+
+![Demonstration](images/demo-interactive.gif)
+
+### In Words
+
 1. Install Docker and Docker Compose (see your OS-specific guide)
 
 2. Run `docker compose up -d`

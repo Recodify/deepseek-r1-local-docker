@@ -79,7 +79,7 @@ while true; do
         # Extract and display the details section
         echo -e "\n${GREEN}All checks complete!${NC}\n"
         # Only show the last occurrence of each status line
-        docker logs $CONTAINER_NAME 2>&1 | sed -n '/^   - /p' | awk '!seen[$0]++' | tail -n 3 | sed "s/✓/$(echo -e "${GREEN}✓${NC}")/"
+        docker logs $CONTAINER_NAME 2>&1 | sed -n '/^   - /p' | awk '!seen[$0]++' | tail -n 3 | sed "s/✓/$(printf "${GREEN}✓${NC}")/"
         echo -e "   - WebUI status: $webui_status"
 
         # Exit with appropriate code based on WebUI status
