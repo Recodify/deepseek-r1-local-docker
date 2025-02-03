@@ -18,12 +18,12 @@ TITLE_PAUSE=2
 ANIMATION_PAUSE=1
 CLEAR_PAUSE=0.05
 
-# Global offset for text alignment
 DEFAULT_OFFSET=32
 DONE_OFFSET=65
+CURRENT_CARD_WIDTH=0
 
-# Add these near the top of the file, after other variable declarations
 CLEANUP=false
+
 while getopts "c" opt; do
     case $opt in
         c)
@@ -32,20 +32,104 @@ while getopts "c" opt; do
     esac
 done
 
-# Shared function to create padding
 create_padding() {
-    local offset="${1:-$DEFAULT_OFFSET}"
-    local padding=""
-    for ((i=0; i<offset; i++)); do
-        padding+=" "
-    done
+    local text="$1"
+    local align="$2"
+    local default_offset="${3:-}"
+    local term_width
+    local padding
+
+    if [ -n "$default_offset" ]; then
+        # Use fixed padding if offset is provided
+        padding=""
+        for ((i=0; i<default_offset; i++)); do
+            padding+=" "
+        done
+    else
+        # Calculate center padding based on text width
+        term_width=$(tput cols)
+
+        # Properly handle the text string with quotes to preserve spaces
+        local stripped_text
+        stripped_text=$(printf "%s" "$text" | sed 's/\x1B\[[0-9;]*[JKmsu]//g')
+        local text_length=${#stripped_text}
+
+        local padding_alignment_factor=2
+        local left_margin_size=2
+        local padding_size=0
+        if [ "$align" = "left" ]; then
+            padding_size=$((((term_width - $CURRENT_CARD_WIDTH) / 2  )+ $left_margin_size))
+        else
+           padding_size=$(( (term_width - text_length) / 2  ))
+        fi
+
+
+        # Ensure padding is not negative
+        if ((padding_size < 0)); then
+            padding_size=0
+        fi
+
+        padding=$(printf "%${padding_size}s" "")
+    fi
+
     echo "$padding"
+}
+
+type_text() {
+    local text="$1"
+    local delay="${2:-0.1}"
+    local padding=$(create_padding "$text")
+
+    printf "${padding}"
+    for ((i = 0; i < ${#text}; i++)); do
+        printf "%c" "${text:$i:1}"
+        sleep "$delay"
+    done
+    printf "\n"
+}
+
+type_text_instant() {
+    local text="$1"
+    local padding=$(create_padding "$text")
+
+    printf "${padding}%s\n" "$text"
+}
+
+type_text_color() {
+    local text="$1"
+    local color="$2"
+    local delay="${3:-0.1}"
+    local padding=$(create_padding "$text")
+
+    printf "${padding}"
+    printf "\033[${color}m"
+    for ((i = 0; i < ${#text}; i++)); do
+        printf "%c" "${text:$i:1}"
+        sleep "$delay"
+    done
+    printf "\033[0m\n"
+}
+
+type_text_color_instant() {
+    local text="$1"
+    local color="$2"
+    local padding=$(create_padding "$text")
+
+    printf "${padding}\033[${color}m%s\033[0m\n" "$text"
 }
 
 type_text_() {
     local text="$1"
     local typing_speed="${2:-$TYPING_SPEED}"
-    simulate_typing "$text" false "$typing_speed"
+    local align="${3:-center}"
+    local padding=$(create_padding "$text" "$align")
+
+    printf "${padding}"
+    for ((i = 0; i < ${#text}; i++)); do
+        printf "%c" "${text:$i:1}"
+        sleep $TYPING_PAUSE
+    done
+    printf "\n"
 }
 
 simulate_typing() {
@@ -134,11 +218,17 @@ comment() {
 
 code() {
     local text="$1"
-    local offset="${2:-$DEFAULT_OFFSET}"
-    local padding=$(create_padding "$offset")
+    local fragment="$2"
+    local continue="$3"
 
-    # Gray text with padding
-    echo -e "${padding}\033[90m${text}\033[0m"
+    local padding=$(create_padding "$text")
+
+    if [ "$continue" = "true" ]; then
+        echo -e "\033[90m${text}\033[0m"
+    else
+        echo -e "${padding}\033[90m${text}\033[0m"
+    fi
+
     sleep $ANIMATION_PAUSE
 }
 
@@ -155,7 +245,7 @@ newline() {
 information() {
     local text="$1"
     local offset="${2:-$DEFAULT_OFFSET}"
-    local padding=$(create_padding "$offset")
+    local padding=$(create_padding "$text")
 
     # Green text with padding
     echo -e "${padding}\033[32m${text}\033[0m"
@@ -164,11 +254,17 @@ information() {
 
 instruction() {
     local text="$1"
-    local offset="${2:-$DEFAULT_OFFSET}"
-    local padding=$(create_padding "$offset")
+    local fragment="$2"
+    local continue="$3"
+    local align="${4:-center}"
+    local padding=$(create_padding "$text" "$align")
 
     # White text with padding
-    echo -e "${padding}\033[37m${text}\033[0m"
+    if [ "$fragment" = "true" ]; then
+      echo -n -e "${padding}\033[37m${text}\033[0m"
+    else
+      echo -e "${padding}\033[37m${text}\033[0m"
+    fi
     sleep $ANIMATION_PAUSE
 }
 
@@ -177,7 +273,7 @@ flash_text() {
     local offset="${2:-$DEFAULT_OFFSET}"
     local flashes=4
     local flash_delay=0.3
-    local padding=$(create_padding "$offset")
+    local padding=$(create_padding "$text")
 
     # Save cursor position
     echo -en "\033[s"
@@ -198,7 +294,6 @@ flash_text() {
     sleep $ANIMATION_PAUSE
 }
 
-# Add this new function after the other function definitions
 transition_clear() {
     # Save cursor position
     echo -en "\033[s"
@@ -225,6 +320,7 @@ transition_clear() {
     echo -en "\033[H"
 }
 
+
 titles() {
     # Clear the screen to start fresh
     clear
@@ -250,20 +346,20 @@ intro() {
     echo -en "\033[?25l"
 
     type_text_  "========================================" 0.98
-    flash_text  "             Ready Player 2?"
+    flash_text  "Ready Player 2?"
     instruction "----------------------------------------"
     newline
-    type_text_  "  Just follow the steps shown next..."
-    type_text_  "  ...and off you go. 💪"
+    type_text_  "Just follow the steps shown next..."
+    type_text_  "...and off you go. 💪"
     newline
     sleep $ANIMATION_PAUSE
     instruction "----------------------------------------"
-    type_text_  "              To the moon! 🚀 "
+    type_text_  "To the moon! 🚀 "
     type_text_  "========================================" 0.98
 
     # Show cursor again
     echo -en "\033[?25h"
-    sleep 2
+    sleep 20
     transition_clear
 }
 
@@ -311,38 +407,41 @@ outro() {
 
     newline
     newline
-    type_text_   "=========================================================" 0.99
-    instruction  "                        All done!"
+    local all_done_card_header="========================================================="
+    CURRENT_CARD_WIDTH=${#all_done_card_header}
+    type_text_    "$all_done_card_header" 1
+
+    instruction  "All done!"
     instruction  "---------------------------------------------------------"
     newline
-    type_text_   "  That's it, you're all set up!"
-    instruction  ""
-    type_text_   "  You can now:"
+    type_text_   "That's it, you're all set up! "
     newline
-    instruction  "   - access the web ui: "
-    code         "      http://localhost:8080"
     newline
-    instruction  "   - chat interactively: "
-    code         "      ./scripts/interact.sh"
+    instruction  "You can now:" false false left
     newline
-    instruction  "   - ask a question: "
-    code         "      ./scripts/prompt.sh 'What is 42?'"
-    newline
-    instruction  "---------------------------------------------------------"
-    newline
-    type_text_   " If you'd like to get in touch:"
-    newline
-    instruction  " 🔗 https://github.com/Recodify/deepseek-r1-local-docker"
-    instruction  " 🧔 https://www.linkedin.com/in/sam-shiles-8494577"
-    instruction  " 🌐 https://recodify.co.uk"
+    instruction  "  - access the web ui: " true false left
+    code         "http://localhost:8080" false true
+    instruction  "  - chat interactively: " true false left
+    code         "./scripts/interact.sh" false true
+    instruction  "  - ask a question: " true false left
+    code         "./scripts/prompt.sh 'What is 42?'" false true
     newline
     instruction  "---------------------------------------------------------"
-    type_text_   "                      Over and out! 👋 "
+    newline
+    type_text_   "If you'd like to get in touch:" $TYPING_SPEED left
+    newline
+    instruction  " 🔗 https://github.com/Recodify/deepseek-r1-local-docker" false false left
+    instruction  " 🧔 https://www.linkedin.com/in/sam-shiles-8494577" false false left
+    instruction  " 🌐 https://recodify.co.uk" false false left
+    newline
+    instruction  "---------------------------------------------------------"
+    type_text_   "Over and out! 👋 "
     type_text_   "=========================================================" 0.99
     newline
     # Show cursor again
     echo -en "\033[?25h"
     sleep 2
+    exit 0
     transition_clear
 }
 
@@ -367,17 +466,19 @@ set_terminal_dimensions() {
     elif command -v resize >/dev/null 2>&1; then
         resize -s "$height" "$width" > /dev/null
     fi
+
+    # small delay to ensure terminal is resized before other commands run
+    sleep 0.25
 }
 
-# Initial terminal setup
-echo "Setting terminal dimensions"
-set_terminal_dimensions 120 48
+set_terminal_dimensions 100 48
+
 
 #clear
-sleep 2
-titles
-intro
-command_intro
-commands
+#sleep 2
+#titles
+#intro
+#command_intro
+#commands
 outro
-clean_up
+#clean_up
