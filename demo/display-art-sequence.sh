@@ -12,9 +12,12 @@ clear_lines() {
 
 # Add color code mapping function
 get_color_code() {
-    local color="${1:-blue}"
+    local color="${1:-}"
     local variant="${2:-base}"
-
+    
+    # If no color specified, return empty string to preserve original colors
+    [[ -z "$color" ]] && return
+    
     # Base colors (30-37)
     local -A base_colors=(
         ["black"]="30" ["red"]="31" ["green"]="32" ["yellow"]="33"
@@ -157,10 +160,17 @@ display_final() {
     local color_code="$1"
     shift
     local -a art_lines=("$@")
-    for line in "${art_lines[@]}"; do
-        colored_line=$(echo "$line" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
-        echo -e "$colored_line"
-    done
+    
+    # Only apply coloring if a color_code is specified
+    if [[ -n "$color_code" ]]; then
+        for line in "${art_lines[@]}"; do
+            colored_line=$(echo "$line" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
+            echo -e "$colored_line"
+        done
+    else
+        # Print lines as-is to preserve existing ANSI colors
+        printf '%s\n' "${art_lines[@]}"
+    fi
 }
 
 # Animation effects functions
@@ -325,6 +335,9 @@ print_single_art() {
     mapfile -t art_lines < "$art_file"
 
     case "$effect" in
+        "raw")
+            display_final "" "${art_lines[@]}"
+            ;;
         "none")
             sleep 1
             display_final "$color_code" "${art_lines[@]}"

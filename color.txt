@@ -1,0 +1,45 @@
+
+
+
+ANSI 0 - (0, 0, 0) - #000000 - 8986 chars
+ANSI 27 - (0, 51, 255) - #0033FF - 2728 chars
+ANSI 214 - (255, 153, 0) - #FF9900 - 1630 chars
+ANSI 202 - (255, 51, 0) - #FF3300 - 1862 chars
+
+ANSI 255 - (238, 238, 238) - #EEEEEE - 364 chars
+ANSI 231 - (255, 255, 255) - #FFFFFF - 4 chars
+ANSI 252 - (208, 208, 208) - #D0D0D0 - 9 chars
+
+ANSI 131 - (153, 51, 51) - #993333 - 29 chars
+ANSI 167 - (204, 51, 51) - #CC3333 - 53 chars
+
+ANSI 254 - (228, 228, 228) - #E4E4E4 - 2 chars
+ANSI 239 - (78, 78, 78) - #4E4E4E - 17 chars
+ANSI 102 - (102, 102, 102) - #666666 - 2 chars
+ANSI 242 - (108, 108, 108) - #6C6C6C - 3 chars
+ANSI 251 - (198, 198, 198) - #C6C6C6 - 1 chars
+ANSI 203 - (255, 51, 51) - #FF3333 - 23 chars
+ANSI 7 - (192, 192, 192) - #C0C0C0 - 4 chars
+ANSI 238 - (68, 68, 68) - #444444 - 5 chars
+ANSI 247 - (158, 158, 158) - #9E9E9E - 3 chars
+ANSI 209 - (255, 102, 51) - #FF6633 - 18 chars
+ANSI 241 - (98, 98, 98) - #626262 - 1 chars
+ANSI 138 - (153, 102, 102) - #996666 - 6 chars
+ANSI 8 - (128, 128, 128) - #808080 - 1 chars
+ANSI 145 - (153, 153, 153) - #999999 - 2 chars
+ANSI 230 - (255, 255, 204) - #FFFFCC - 14 chars
+ANSI 223 - (255, 204, 153) - #FFCC99 - 6 chars
+ANSI 173 - (204, 102, 51) - #CC6633 - 2 chars
+ANSI 222 - (255, 204, 102) - #FFCC66 - 2 chars
+ANSI 224 - (255, 204, 204) - #FFCCCC - 1 chars
+ANSI 172 - (204, 102, 0) - #CC6600 - 2 chars
+ANSI 253 - (218, 218, 218) - #DADADA - 3 chars
+ANSI 186 - (204, 204, 102) - #CCCC66 - 1 chars
+ANSI 187 - (204, 204, 153) - #CCCC99 - 2 chars
+ANSI 240 - (88, 88, 88) - #585858 - 5 chars
+ANSI 237 - (58, 58, 58) - #3A3A3A - 1 chars
+ANSI 178 - (204, 153, 0) - #CC9900 - 3 chars
+ANSI 244 - (128, 128, 128) - #808080 - 1 chars
+ANSI 59 - (51, 51, 51) - #333333 - 1 chars
+ANSI 250 - (188, 188, 188) - #BCBCBC - 2 chars
+ANSI 245 - (138, 138, 138) - #8A8A8A - 1 chars
