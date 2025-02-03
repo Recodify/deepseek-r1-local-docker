@@ -53,7 +53,7 @@ simulate_typing() {
     local execute_command="${2:-true}"  # Default to true for backward compatibility
     local typing_speed="${3:-$TYPING_SPEED}"  # Default to global TYPING_SPEED if not provided
     local typing_pause=$(echo "1 - $typing_speed" | bc)
-    
+
     if [ "$execute_command" = true ]; then
         local current_dir=$(pwd)
         # Update prompt with current directory - show only current dir name
@@ -132,11 +132,11 @@ comment() {
     sleep $ANIMATION_PAUSE
 }
 
-code() {    
+code() {
     local text="$1"
     local offset="${2:-$DEFAULT_OFFSET}"
     local padding=$(create_padding "$offset")
-    
+
     # Gray text with padding
     echo -e "${padding}\033[90m${text}\033[0m"
     sleep $ANIMATION_PAUSE
@@ -152,11 +152,11 @@ newline() {
     echo ""
 }
 
-information() {    
+information() {
     local text="$1"
     local offset="${2:-$DEFAULT_OFFSET}"
     local padding=$(create_padding "$offset")
-    
+
     # Green text with padding
     echo -e "${padding}\033[32m${text}\033[0m"
     sleep $ANIMATION_PAUSE
@@ -164,21 +164,21 @@ information() {
 
 instruction() {
     local text="$1"
-    local offset="${2:-$DEFAULT_OFFSET}"    
+    local offset="${2:-$DEFAULT_OFFSET}"
     local padding=$(create_padding "$offset")
-    
+
     # White text with padding
     echo -e "${padding}\033[37m${text}\033[0m"
     sleep $ANIMATION_PAUSE
 }
 
-flash_text() {    
+flash_text() {
     local text="$1"
     local offset="${2:-$DEFAULT_OFFSET}"
     local flashes=4
     local flash_delay=0.3
     local padding=$(create_padding "$offset")
-    
+
     # Save cursor position
     echo -en "\033[s"
     for ((i=1; i<=$flashes; i++)); do
@@ -193,8 +193,8 @@ flash_text() {
     done
 
     # Final display of text
-    echo -e "${padding}\033[37m${text}\033[0m"    
-    
+    echo -e "${padding}\033[37m${text}\033[0m"
+
     sleep $ANIMATION_PAUSE
 }
 
@@ -202,12 +202,12 @@ flash_text() {
 transition_clear() {
     # Save cursor position
     echo -en "\033[s"
-    
+
     # Get current cursor position (row)
     local current_row
     IFS=';' read -sdR -p $'\E[6n' ROW COL
     current_row=${ROW#*[}
-    
+
     # Create transition effect from bottom to top
     for ((i=$current_row; i>=1; i--)); do
         # Move cursor to line i
@@ -219,7 +219,7 @@ transition_clear() {
         echo -en "\033[${i};1H"
         printf '%*s' "${COLUMNS:-$(tput cols)}" '' | tr ' ' ' '
     done
-    
+
     # Actually clear the screen and reset cursor
     clear
     echo -en "\033[H"
@@ -230,45 +230,44 @@ titles() {
     clear
     sleep $STEP_PAUSE
 
-    # Titles
+    # Set specific dimensions for each sequence
     ./demo/display-art-sequence.sh ./demo/recodify-sequence.conf
     sleep 1.5
     transition_clear
-
     ./demo/display-art-sequence.sh ./demo/deepseek-sequence.conf
     sleep 2
     transition_clear
 }
 
 intro() {
-    #Intro 
-    
+    #Intro
+
     newline
     newline
     newline
     newline
      # Hide cursor
     echo -en "\033[?25l"
-    
+
     type_text_  "========================================" 0.98
     flash_text  "             Ready Player 2?"
     instruction "----------------------------------------"
     newline
-    type_text_  "  Just follow the steps shown next..." 
-    type_text_  "  ...and off you go. 💪" 
+    type_text_  "  Just follow the steps shown next..."
+    type_text_  "  ...and off you go. 💪"
     newline
     sleep $ANIMATION_PAUSE
     instruction "----------------------------------------"
-    type_text_  "              To the moon! 🚀 " 
+    type_text_  "              To the moon! 🚀 "
     type_text_  "========================================" 0.98
-    
+
     # Show cursor again
     echo -en "\033[?25h"
     sleep 2
     transition_clear
 }
 
-command_intro() {    
+command_intro() {
     newline
     sleep $ANIMATION_PAUSE
     newline
@@ -305,7 +304,7 @@ commands() {
     transition_clear
 }
 
-outro() {    
+outro() {
     DEFAULT_OFFSET=23
     # Hide cursor
     echo -en "\033[?25l"
@@ -313,12 +312,12 @@ outro() {
     newline
     newline
     type_text_   "=========================================================" 0.99
-    instruction  "                        All done!" 
-    instruction  "---------------------------------------------------------" 
+    instruction  "                        All done!"
+    instruction  "---------------------------------------------------------"
     newline
-    type_text_   "  That's it, you're all set up!" 
-    instruction  "" 
-    type_text_   "  You can now:" 
+    type_text_   "  That's it, you're all set up!"
+    instruction  ""
+    type_text_   "  You can now:"
     newline
     instruction  "   - access the web ui: "
     code         "      http://localhost:8080"
@@ -329,18 +328,18 @@ outro() {
     instruction  "   - ask a question: "
     code         "      ./scripts/prompt.sh 'What is 42?'"
     newline
-    instruction  "---------------------------------------------------------" 
+    instruction  "---------------------------------------------------------"
     newline
-    type_text_   " If you'd like to get in touch:" 
+    type_text_   " If you'd like to get in touch:"
     newline
-    instruction  " 🔗 https://github.com/Recodify/deepseek-r1-local-docker" 
-    instruction  " 🧔 https://www.linkedin.com/in/sam-shiles-8494577" 
-    instruction  " 🌐 https://recodify.co.uk" 
+    instruction  " 🔗 https://github.com/Recodify/deepseek-r1-local-docker"
+    instruction  " 🧔 https://www.linkedin.com/in/sam-shiles-8494577"
+    instruction  " 🌐 https://recodify.co.uk"
     newline
-    instruction  "---------------------------------------------------------" 
-    type_text_   "                      Over and out! 👋 " 
+    instruction  "---------------------------------------------------------"
+    type_text_   "                      Over and out! 👋 "
     type_text_   "=========================================================" 0.99
-    newline    
+    newline
     # Show cursor again
     echo -en "\033[?25h"
     sleep 2
@@ -359,7 +358,22 @@ clean_up() {
     fi
 }
 
-clear
+# At the start of the script, set initial size
+set_terminal_dimensions() {
+    local width="${1:-100}"
+    local height="${2:-24}"
+    if [[ "$TERM" == "xterm"* ]] || [[ "$TERM" == "screen"* ]]; then
+        printf '\033[8;%d;%dt' "$height" "$width"
+    elif command -v resize >/dev/null 2>&1; then
+        resize -s "$height" "$width" > /dev/null
+    fi
+}
+
+# Initial terminal setup
+echo "Setting terminal dimensions"
+set_terminal_dimensions 120 48
+
+#clear
 sleep 2
 titles
 intro
