@@ -1,27 +1,29 @@
 #!/bin/bash
 
-# Color codes matching your bashrc
+# Color codes
 GREEN='\033[01;32m'
 BLUE='\033[01;34m'
 RESET='\033[00m'
 WHITE='\033[00m'
 
-# Sleep duration controls
+# Timings
 TYPING_SPEED=0.98
 TYPING_PAUSE=$(echo "1 - $TYPING_SPEED" | bc)
 COMMAND_PAUSE=0.2
 STEP_PAUSE=1
 STEP_INTRO_PAUSE=1.5
 INITIAL_PAUSE=1
-SECTION_PAUSE=1.5
+SECTION_PAUSE=0.5
 TITLE_PAUSE=2
-ANIMATION_PAUSE=1
-CLEAR_PAUSE=0.05
+ANIMATION_PAUSE=0.6
+CLEAR_PAUSE=0.02
+TRANSITION_PAUSE=1.5
 
+# Layout
 DEFAULT_OFFSET=32
-DONE_OFFSET=65
 CURRENT_CARD_WIDTH=0
 
+# Options
 CLEANUP=false
 
 while getopts "c" opt; do
@@ -75,61 +77,21 @@ create_padding() {
     echo "$padding"
 }
 
-type_text() {
-    local text="$1"
-    local delay="${2:-0.1}"
-    local padding=$(create_padding "$text")
-
-    printf "${padding}"
-    for ((i = 0; i < ${#text}; i++)); do
-        printf "%c" "${text:$i:1}"
-        sleep "$delay"
-    done
-    printf "\n"
-}
-
-type_text_instant() {
-    local text="$1"
-    local padding=$(create_padding "$text")
-
-    printf "${padding}%s\n" "$text"
-}
-
-type_text_color() {
-    local text="$1"
-    local color="$2"
-    local delay="${3:-0.1}"
-    local padding=$(create_padding "$text")
-
-    printf "${padding}"
-    printf "\033[${color}m"
-    for ((i = 0; i < ${#text}; i++)); do
-        printf "%c" "${text:$i:1}"
-        sleep "$delay"
-    done
-    printf "\033[0m\n"
-}
-
-type_text_color_instant() {
-    local text="$1"
-    local color="$2"
-    local padding=$(create_padding "$text")
-
-    printf "${padding}\033[${color}m%s\033[0m\n" "$text"
-}
-
-type_text_() {
+chat() {
     local text="$1"
     local typing_speed="${2:-$TYPING_SPEED}"
+    local typing_pause=$(echo "1 - $typing_speed" | bc)
     local align="${3:-center}"
     local padding=$(create_padding "$text" "$align")
 
     printf "${padding}"
-    for ((i = 0; i < ${#text}; i++)); do
-        printf "%c" "${text:$i:1}"
-        sleep $TYPING_PAUSE
+    echo -n "$text" | while IFS= read -r -n1 char; do
+        printf "%s" "$char"
+        sleep $typing_pause
     done
     printf "\n"
+
+    sleep $ANIMATION_PAUSE
 }
 
 simulate_typing() {
@@ -295,6 +257,7 @@ flash_text() {
 }
 
 transition_clear() {
+    sleep $TRANSITION_PAUSE
     # Save cursor position
     echo -en "\033[s"
 
@@ -320,24 +283,76 @@ transition_clear() {
     echo -en "\033[H"
 }
 
+set_terminal_dimensions() {
+    local width="${1:-100}"
+    local height="${2:-24}"
+
+    # Check if we're already in the resized window
+    if [ -z "$TERMINAL_RESIZED" ]; then
+        # Launch new terminal and exit current one
+        if [ -n "$GNOME_TERMINAL_SERVICE" ]; then
+            gnome-terminal -- bash -c "TERMINAL_RESIZED=1 $0 $@"
+            exit 0
+        elif [ -n "$KONSOLE_VERSION" ]; then
+            konsole -e bash -c "TERMINAL_RESIZED=1 $0 $@"
+            exit 0
+        fi
+    fi
+
+    # Try multiple resize methods
+    if [ -t 0 ]; then  # Only attempt resize if running in a terminal
+        # Method 1: ANSI escape sequence
+        printf '\033[8;%d;%dt' "$height" "$width"
+
+        # Method 2: tput if available
+        if command -v tput >/dev/null 2>&1; then
+            if [ "$TERM" != "dumb" ]; then
+                tput cols "$width" >/dev/null 2>&1
+                tput lines "$height" >/dev/null 2>&1
+            fi
+        fi
+
+        # Method 3: resize command if available
+        if command -v resize >/dev/null 2>&1; then
+            resize -s "$height" "$width" > /dev/null 2>&1
+        fi
+
+        # Method 4: stty if available
+        if command -v stty >/dev/null 2>&1; then
+            stty rows "$height" cols "$width" 2>/dev/null
+        fi
+    fi
+
+    # Verify dimensions - capture output in variables
+    # Small delay to ensure terminal is resized before we process the check
+    sleep 0.25
+    local actual_width
+    local actual_height
+    actual_width=$(tput cols 2>/dev/null | tr -d '\n' || echo "$width")
+    actual_height=$(tput lines 2>/dev/null | tr -d '\n' || echo "$height")
+
+    # If dimensions don't match, show a note
+    if [ "$actual_width" != "$width" ] || [ "$actual_height" != "$height" ]; then
+        echo "Actual dimensions: $actual_width x $actual_height"
+        echo "Desired dimensions: $width x $height"
+        echo -e "\033[33m!NOTE: Terminal size could not be set automatically. For best experience, please resize your terminal to ${width}x${height}.\033[0m"
+        sleep 20
+    fi
+}
 
 titles() {
     # Clear the screen to start fresh
     clear
-    sleep $STEP_PAUSE
 
     # Set specific dimensions for each sequence
-    ./demo/display-art-sequence.sh ./demo/recodify-sequence.conf
-    sleep 1.5
+    ./demo/display-art-sequence.sh ./demo/recodify-sequence.conf 0.04 0.2
     transition_clear
-    ./demo/display-art-sequence.sh ./demo/deepseek-sequence.conf
-    sleep 2
+    ./demo/display-art-sequence.sh ./demo/deepseek-sequence.conf 0.05 0.2
     transition_clear
 }
 
 intro() {
     #Intro
-
     newline
     newline
     newline
@@ -345,21 +360,18 @@ intro() {
      # Hide cursor
     echo -en "\033[?25l"
 
-    type_text_  "========================================" 0.98
+    chat  "========================================" 0.99
     flash_text  "Ready Player 2?"
     instruction "----------------------------------------"
     newline
-    type_text_  "Just follow the steps shown next..."
-    type_text_  "...and off you go. 💪"
+    chat  "Just follow the steps shown next..."
+    chat  "...and off you go. 💪"
     newline
     sleep $ANIMATION_PAUSE
     instruction "----------------------------------------"
-    type_text_  "To the moon! 🚀 "
-    type_text_  "========================================" 0.98
+    chat  "To the moon! 🚀 "
+    chat  "========================================" 0.99
 
-    # Show cursor again
-    echo -en "\033[?25h"
-    sleep 20
     transition_clear
 }
 
@@ -372,6 +384,9 @@ command_intro() {
 
 commands() {
     # Commands
+    # Show cursor again
+    echo -en "\033[?25h"
+
     comment "First: create a working directory"
     simulate_typing "mkdir demo-deploy"
 
@@ -396,7 +411,6 @@ commands() {
     comment "Off we go: Feel free to ask a question!"
     simulate_typing "./scripts/prompt.sh \"What's the capital of France?\""
 
-    sleep 2
     transition_clear
 }
 
@@ -409,14 +423,14 @@ outro() {
     newline
     local all_done_card_header="========================================================="
     CURRENT_CARD_WIDTH=${#all_done_card_header}
-    type_text_    "$all_done_card_header" 1
-
+    chat    "$all_done_card_header" 0.995
     instruction  "All done!"
     instruction  "---------------------------------------------------------"
     newline
-    type_text_   "That's it, you're all set up! "
+    chat   "That's it, you're all set up! "
     newline
     newline
+    sleep $SECTION_PAUSE
     instruction  "You can now:" false false left
     newline
     instruction  "  - access the web ui: " true false left
@@ -428,20 +442,18 @@ outro() {
     newline
     instruction  "---------------------------------------------------------"
     newline
-    type_text_   "If you'd like to get in touch:" $TYPING_SPEED left
+    chat   "If you'd like to get in touch:" $TYPING_SPEED left
     newline
     instruction  " 🔗 https://github.com/Recodify/deepseek-r1-local-docker" false false left
     instruction  " 🧔 https://www.linkedin.com/in/sam-shiles-8494577" false false left
     instruction  " 🌐 https://recodify.co.uk" false false left
     newline
     instruction  "---------------------------------------------------------"
-    type_text_   "Over and out! 👋 "
-    type_text_   "=========================================================" 0.99
+    chat   "Over and out! 👋 "
+    chat   "=========================================================" 0.995
     newline
     # Show cursor again
     echo -en "\033[?25h"
-    sleep 2
-    exit 0
     transition_clear
 }
 
@@ -457,28 +469,14 @@ clean_up() {
     fi
 }
 
-# At the start of the script, set initial size
-set_terminal_dimensions() {
-    local width="${1:-100}"
-    local height="${2:-24}"
-    if [[ "$TERM" == "xterm"* ]] || [[ "$TERM" == "screen"* ]]; then
-        printf '\033[8;%d;%dt' "$height" "$width"
-    elif command -v resize >/dev/null 2>&1; then
-        resize -s "$height" "$width" > /dev/null
-    fi
-
-    # small delay to ensure terminal is resized before other commands run
-    sleep 0.25
-}
 
 set_terminal_dimensions 100 48
 
-
-#clear
-#sleep 2
-#titles
-#intro
-#command_intro
-#commands
+clear
+titles
+intro
+command_intro
+commands
 outro
 #clean_up
+sleep 10

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+FRAME_PAUSE="${2:-0.1}"
+EFFECT_TRANSITION_PAUSE="${3:-0.3}"
+NEXT_IMAGE_PAUSE="${4:-0.5}"
 # Helper function to clear previous lines
 clear_lines() {
     local num_lines=$1
@@ -106,7 +109,7 @@ fade_in() {
             colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${prefix}${shade}m&\x1b[0m/g")
             echo -e "${padding_spaces}${colored_line}"
         done
-        sleep 0.3
+        sleep $EFFECT_TRANSITION_PAUSE
     done
 
     # Final display
@@ -163,7 +166,7 @@ pop() {
         # Print the new line
         colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
         echo -e "${padding_spaces}${colored_line}"
-        sleep 0.2
+        sleep $FRAME_PAUSE
     done
 }
 
@@ -240,7 +243,7 @@ rainbow() {
             colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${prefix}${color}m&\x1b[0m/g")
             echo -e "${padding_spaces}${colored_line}"
         done
-        sleep 0.15
+        sleep $FRAME_PAUSE
     done
 
     # Final display
@@ -260,11 +263,11 @@ pop_rainbow() {
         # Print the new line
         colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
         echo -e "$colored_line"
-        sleep 0.2
+        sleep $FRAME_PAUSE
     done
 
     # Short pause between effects
-    sleep 0.3
+    sleep $EFFECT_TRANSITION_PAUSE
 
     # Then do the rainbow animation
     local base_color="${color_code##*;}"
@@ -279,7 +282,7 @@ pop_rainbow() {
             colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${prefix}${color}m&\x1b[0m/g")
             echo -e "$colored_line"
         done
-        sleep 0.15
+        sleep $FRAME_PAUSE
     done
 
     # Final display
@@ -310,11 +313,11 @@ pop_overlay_rainbow() {
     for ((i=0; i<total_lines; i++)); do
         colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
         echo -e "${padding_spaces}${colored_line}"
-        sleep 0.2
+        sleep $FRAME_PAUSE
     done
 
     # Short pause between effects
-    sleep 0.3
+    sleep $EFFECT_TRANSITION_PAUSE
 
     # Then do the rainbow animation
     local base_color="${color_code##*;}"
@@ -329,7 +332,7 @@ pop_overlay_rainbow() {
             colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${prefix}${color}m&\x1b[0m/g")
             echo -e "${padding_spaces}${colored_line}"
         done
-        sleep 0.15
+        sleep $FRAME_PAUSE
     done
 
     # Final display
@@ -440,11 +443,13 @@ display_sequence() {
         [[ -z "$file" || -z "$effect" || -z "$color" ]] && continue
 
         print_single_art "$file" "$effect" "$color" "$show_config"
+        sleep $NEXT_IMAGE_PAUSE
     done < "$config_file"
 
     # Show cursor
     tput cnorm
 }
+
 
 
 # Call the main function with the config file
