@@ -1,5 +1,8 @@
 #!/bin/bash
 
+FRAME_PAUSE="${2:-0.1}"
+EFFECT_TRANSITION_PAUSE="${3:-0.3}"
+NEXT_IMAGE_PAUSE="${4:-0.5}"
 # Helper function to clear previous lines
 clear_lines() {
     local num_lines=$1
@@ -12,8 +15,11 @@ clear_lines() {
 
 # Add color code mapping function
 get_color_code() {
-    local color="${1:-blue}"
+    local color="${1:-}"
     local variant="${2:-base}"
+
+    # If no color specified, return empty string to preserve original colors
+    [[ -z "$color" ]] && return
 
     # Base colors (30-37)
     local -A base_colors=(
@@ -46,22 +52,54 @@ get_color_code() {
     echo "$color_code"
 }
 
+# Add this new function after the get_color_code function
+calculate_padding() {
+    local -a art_lines=("$@")
+    local max_width=0
+    local term_width
+
+    # Get terminal width
+    term_width=$(tput cols)
+
+    # Find the maximum width of the art
+    for line in "${art_lines[@]}"; do
+        # Strip ANSI escape sequences and count actual characters
+        local stripped_line=$(echo -e "$line" | sed 's/\x1B\[[0-9;]*[JKmsu]//g')
+        local line_length=${#stripped_line}
+        if ((line_length > max_width)); then
+            max_width=$line_length
+        fi
+    done
+
+    # Calculate padding needed to center
+    local padding=$(( (term_width - max_width) / 2 ))
+
+    # Ensure padding is not negative
+    if ((padding < 0)); then
+        padding=0
+    fi
+
+    echo "$padding"
+}
+
 # Animation effects functions
 fade_in() {
     local color_code="$1"
     shift
     local -a art_lines=("$@")
     local total_lines=${#art_lines[@]}
+    local padding=$(calculate_padding "${art_lines[@]}")
+    local padding_spaces=$(printf "%${padding}s" "")
 
     # Extract base color number for fading
-    local base_color="${color_code##*;}"  # Remove everything before last semicolon
+    local base_color="${color_code##*;}"
     local prefix=""
-    [[ "$color_code" == *";"* ]] && prefix="${color_code%;*};"  # Keep bold prefix if it exists
+    [[ "$color_code" == *";"* ]] && prefix="${color_code%;*};"
 
     # First show in dark gray
     for ((i=0; i<total_lines; i++)); do
         colored_line=$(echo "${art_lines[$i]}" | sed 's/[(/|_\\,]/\x1b[90m&\x1b[0m/g')
-        echo -e "$colored_line"
+        echo -e "${padding_spaces}${colored_line}"
     done
 
     # Fade through shades to final color
@@ -69,9 +107,9 @@ fade_in() {
         clear_lines "$total_lines"
         for ((i=0; i<total_lines; i++)); do
             colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${prefix}${shade}m&\x1b[0m/g")
-            echo -e "$colored_line"
+            echo -e "${padding_spaces}${colored_line}"
         done
-        sleep 0.3
+        sleep $EFFECT_TRANSITION_PAUSE
     done
 
     # Final display
@@ -84,8 +122,10 @@ bounce_in() {
     shift
     local -a art_lines=("$@")
     local total_lines=${#art_lines[@]}
-    local padding=5
-    local total_height=$((total_lines + padding))
+    local padding=$(calculate_padding "${art_lines[@]}")
+    local padding_spaces=$(printf "%${padding}s" "")
+    local padding_vertical=5
+    local total_height=$((total_lines + padding_vertical))
 
     # Start with extra newlines
     for ((i=0; i<total_height; i++)); do
@@ -118,13 +158,15 @@ pop() {
     shift
     local -a art_lines=("$@")
     local total_lines=${#art_lines[@]}
+    local padding=$(calculate_padding "${art_lines[@]}")
+    local padding_spaces=$(printf "%${padding}s" "")
 
     # Start from the bottom, showing one line at a time
     for ((i=0; i<total_lines; i++)); do
         # Print the new line
         colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
-        echo -e "$colored_line"
-        sleep 0.2
+        echo -e "${padding_spaces}${colored_line}"
+        sleep $FRAME_PAUSE
     done
 }
 
@@ -146,21 +188,29 @@ pop_overlay() {
     echo -en "\033[${total_lines}A"
 
     # Show lines one by one
-    for ((i=0; i<total_lines; i++)); do
-        colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
-        echo -en "\r\033[K${colored_line}\n"
-        sleep 0.2
-    done
+    pop "$color_code" "${art_lines[@]}"
 }
 
+# Modify the display_final function to include centering
 display_final() {
     local color_code="$1"
     shift
     local -a art_lines=("$@")
-    for line in "${art_lines[@]}"; do
-        colored_line=$(echo "$line" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
-        echo -e "$colored_line"
-    done
+    local padding=$(calculate_padding "${art_lines[@]}")
+    local padding_spaces=$(printf "%${padding}s" "")
+
+    # Only apply coloring if a color_code is specified
+    if [[ -n "$color_code" ]]; then
+        for line in "${art_lines[@]}"; do
+            colored_line=$(echo "$line" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
+            echo -e "${padding_spaces}${colored_line}"
+        done
+    else
+        # Print lines as-is to preserve existing ANSI colors
+        for line in "${art_lines[@]}"; do
+            echo -e "${padding_spaces}${line}"
+        done
+    fi
 }
 
 # Animation effects functions
@@ -168,6 +218,8 @@ rainbow() {
     local final_color_code="$1"
     shift
     local -a art_lines=("$@")
+    local padding=$(calculate_padding "${art_lines[@]}")
+    local padding_spaces=$(printf "%${padding}s" "")
     local total_lines=${#art_lines[@]}
 
     # Extract base color number for final color
@@ -181,7 +233,7 @@ rainbow() {
     # First show in dark gray
     for ((i=0; i<total_lines; i++)); do
         colored_line=$(echo "${art_lines[$i]}" | sed 's/[(/|_\\,]/\x1b[90m&\x1b[0m/g')
-        echo -e "$colored_line"
+        echo -e "${padding_spaces}${colored_line}"
     done
 
     # Transition through colors
@@ -189,9 +241,9 @@ rainbow() {
         clear_lines "$total_lines"
         for ((i=0; i<total_lines; i++)); do
             colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${prefix}${color}m&\x1b[0m/g")
-            echo -e "$colored_line"
+            echo -e "${padding_spaces}${colored_line}"
         done
-        sleep 0.15
+        sleep $FRAME_PAUSE
     done
 
     # Final display
@@ -211,11 +263,11 @@ pop_rainbow() {
         # Print the new line
         colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
         echo -e "$colored_line"
-        sleep 0.2
+        sleep $FRAME_PAUSE
     done
 
     # Short pause between effects
-    sleep 0.3
+    sleep $EFFECT_TRANSITION_PAUSE
 
     # Then do the rainbow animation
     local base_color="${color_code##*;}"
@@ -230,7 +282,7 @@ pop_rainbow() {
             colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${prefix}${color}m&\x1b[0m/g")
             echo -e "$colored_line"
         done
-        sleep 0.15
+        sleep $FRAME_PAUSE
     done
 
     # Final display
@@ -243,6 +295,8 @@ pop_overlay_rainbow() {
     shift
     local -a art_lines=("$@")
     local total_lines=${#art_lines[@]}
+    local padding=$(calculate_padding "${art_lines[@]}")
+    local padding_spaces=$(printf "%${padding}s" "")
 
     # Save cursor position
     echo -en "\033[s"
@@ -258,12 +312,12 @@ pop_overlay_rainbow() {
     # Show lines one by one
     for ((i=0; i<total_lines; i++)); do
         colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${color_code}m&\x1b[0m/g")
-        echo -en "\r\033[K${colored_line}\n"
-        sleep 0.2
+        echo -e "${padding_spaces}${colored_line}"
+        sleep $FRAME_PAUSE
     done
 
     # Short pause between effects
-    sleep 0.3
+    sleep $EFFECT_TRANSITION_PAUSE
 
     # Then do the rainbow animation
     local base_color="${color_code##*;}"
@@ -276,9 +330,9 @@ pop_overlay_rainbow() {
         clear_lines "$total_lines"
         for ((i=0; i<total_lines; i++)); do
             colored_line=$(echo "${art_lines[$i]}" | sed "s/[(/|_\\,]/\x1b[${prefix}${color}m&\x1b[0m/g")
-            echo -e "$colored_line"
+            echo -e "${padding_spaces}${colored_line}"
         done
-        sleep 0.15
+        sleep $FRAME_PAUSE
     done
 
     # Final display
@@ -293,7 +347,7 @@ print_single_art() {
     local color_spec="${3:-blue}"
     local show_config="${4:-}"
 
-    
+
 
     # Split color_spec into color and variant (e.g., "blue:base" or just "blue")
     local color="${color_spec%:*}"
@@ -316,7 +370,7 @@ print_single_art() {
         echo -e "# File: $art_file"
         echo -e "# Effect: $effect"
         echo -e "# Color: $color_spec\033[0m"
-        
+
         echo -e "$color_code"
     fi
 
@@ -325,6 +379,9 @@ print_single_art() {
     mapfile -t art_lines < "$art_file"
 
     case "$effect" in
+        "raw")
+            display_final "" "${art_lines[@]}"
+            ;;
         "none")
             sleep 1
             display_final "$color_code" "${art_lines[@]}"
@@ -386,11 +443,13 @@ display_sequence() {
         [[ -z "$file" || -z "$effect" || -z "$color" ]] && continue
 
         print_single_art "$file" "$effect" "$color" "$show_config"
+        sleep $NEXT_IMAGE_PAUSE
     done < "$config_file"
 
     # Show cursor
     tput cnorm
 }
+
 
 
 # Call the main function with the config file
