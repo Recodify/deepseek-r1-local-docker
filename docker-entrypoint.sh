@@ -7,7 +7,7 @@ ollama serve &
 echo "Waiting for Ollama server to initialize..."
 max_attempts=30
 attempt=0
-while ! curl -s http://localhost:11434/api/tags >/dev/null; do
+while ! curl -s http://localhost:${OLLAMA_PORT:-11434}/api/tags >/dev/null; do
     sleep 1
     attempt=$((attempt + 1))
     if [ $attempt -eq $max_attempts ]; then
